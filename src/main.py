@@ -39,6 +39,11 @@ async def on_ready():
 
     logging.info("Available scrapers: " + ", ".join([s.name for s in scrapers]))
 
+    logging.info("Active filters - min price: {}, max price: {}, min size: {}".format(
+        config.min_price or "not set",
+        config.max_price or "not set",
+        config.min_size or "not set"))
+
     logging.info("Fetching latest offers every {} minutes".format(interval_time))
 
     process_latest_offers.start()

@@ -11,7 +11,8 @@ def flatten(xs):
             yield x
 
 
-_PRICE_PATTERN = re.compile(r"\d+(?:[\s\u00a0]\d{3})*(?:[.,]\d+)?")
+_PRICE_PATTERN = re.compile(r"\d+(?:[\s\u00a0.,]\d{3})*(?:[.,]\d{1,2})?")
+_PRICE_DECIMALS = re.compile(r"[.,](\d{1,2})$")
 _SIZE_PATTERN = re.compile(r"(\d+(?:[.,]\d+)?)\s*m\s*(?:2|²)", re.IGNORECASE)
 
 
@@ -32,7 +33,16 @@ def parse_price(price: int | float | str) -> float | None:
     if match is None:
         return None
 
-    return float(re.sub(r"[^\d.]", "", match.group().replace(",", ".")))
+    raw = match.group()
+
+    # Tečka i čárka se používají jako oddělovač tisíců ("25.000 Kč") i jako
+    # desetinný oddělovač ("12 345,50"). Za desetinný se považuje pouze
+    # oddělovač následovaný jednou nebo dvěma číslicemi na konci čísla.
+    decimals = _PRICE_DECIMALS.search(raw)
+    if decimals is None:
+        return float(re.sub(r"\D", "", raw))
+
+    return float(re.sub(r"\D", "", raw[:decimals.start()]) + "." + decimals.group(1))
 
 
 def parse_size(title: str) -> float | None:
