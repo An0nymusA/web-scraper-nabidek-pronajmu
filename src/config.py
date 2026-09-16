@@ -41,6 +41,7 @@ class Config:
     refresh_interval_nighttime_minutes: int = environ.var(converter=int)
     dispositions: Disposition = environ.var(converter=dispositions_converter)
     min_price: int = environ.var(converter=int, default=0)
+    max_price: int = environ.var(converter=int, default=0)
     min_size: int = environ.var(converter=int, default=0)
     embed_batch_size: int = environ.var(converter=int, default=10)
 
