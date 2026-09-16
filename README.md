@@ -37,6 +37,10 @@ Aplikace při prvním spuštění nevypíše žádné nabídky, pouze si stáhne
 - `DISCORD_DEV_CHANNEL` - Unikátní číslo Discord kanálu, kde se budou posílat chyby programu.
 - `DISCORD_TOKEN` - Obsahuje Discord token bota. [Návod pro získání tokenu](https://discordgsm.com/guide/how-to-get-a-discord-bot-token)
 - `DISPOSITIONS` - Obsahuje seznam dispozic oddělených čárkou. Např.: `DISPOSITIONS=2+kk,2+1,others`
+- `MIN_PRICE` - Minimální cena pronájmu v Kč za měsíc. Nabídky s nižší cenou se nepřeposílají. Výchozí `0` (bez omezení). Např.: `MIN_PRICE=12000`
+- `MIN_SIZE` - Minimální výměra bytu v m². Výměra se zjišťuje z názvu nabídky (formát `45m2` nebo `45m²`). Nabídky s menší výměrou se nepřeposílají. Výchozí `0` (bez omezení). Např.: `MIN_SIZE=50`
+
+Pokud se u nabídky nepodaří cenu nebo výměru zjistit (např. server ji neuvádí), nabídka filtrem projde a je přeposlána.
 
 ### Seznam dostupných hodnot parametru `DISPOSITIONS`
 - `1+kk`
