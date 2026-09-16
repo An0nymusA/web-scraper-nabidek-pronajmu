@@ -26,7 +26,7 @@ Nicméně je možné při spuštění aplikace nakonfigurovat, které  **dispozi
     - Vytvořte si lokální soubor `.env.local` a nastavte v něm všechny požadované parametry (minimálně však Discord token, cílovou roomku a požadované dispozice bytu)
     - následně je možné spustit `make run` nebo v debug režimu `make debug`
 - **Spuštění v Dockeru**
-    - Přiložená Docker Compose konfigurace souží pro vývoj. Stačí ji spustit příkazem `docker-compose up -d` (má zapnutý debug mód)
+    - Přiložená Docker Compose konfigurace souží pro vývoj. Stačí ji spustit příkazem `docker-compose up -d` (debug mód je vypnutý, zapnete jej nastavením `DEBUG=1` v `docker-compose.yml`)
     - K dispozici je také sestavený Docker obraz v Ducker Hub, vždy aktuální s master větví - [`janch32/web-scraper-nabidek-pronajmu`](https://hub.docker.com/r/janch32/web-scraper-nabidek-pronajmu)
     - Kromě toho je možné vytvořit "produkční" Docker image díky `Dockerfile`. Při spuštění kontejneru je nutné nastavit všechny požadované env proměnné (ne v v .env.local!)
 
