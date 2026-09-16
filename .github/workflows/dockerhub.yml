@@ -1,8 +1,10 @@
 name: Build and publish image on Docker Hub
 
+# Automatické sestavení je vypnuté - obraz se publikuje pod účtem původního
+# autora (janch32) a v této forku k tomu nejsou nastavené secrets.
+# Workflow lze v případě potřeby spustit ručně přes záložku Actions.
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 jobs:
   build_docker_image:
