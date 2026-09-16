@@ -48,7 +48,7 @@ async def process_latest_offers():
     logging.info("Fetching offers")
 
     new_offers: list[RentalOffer] = []
-    for offer in fetch_latest_offers(scrapers, config.min_price, config.min_size):
+    for offer in fetch_latest_offers(scrapers, config.min_price, config.min_size, config.max_price):
         if not storage.contains(offer):
             new_offers.append(offer)
 
