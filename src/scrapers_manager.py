@@ -14,6 +14,7 @@ from scrapers.scraper_remax import ScraperRemax
 from scrapers.scraper_sreality import ScraperSreality
 from scrapers.scraper_ulov_domov import ScraperUlovDomov
 from scrapers.scraper_bezrealitky import ScraperBezrealitky
+from utils import parse_price, parse_size
 
 
 def create_scrapers(dispositions: Disposition) -> list[ScraperBase]:
@@ -30,8 +31,40 @@ def create_scrapers(dispositions: Disposition) -> list[ScraperBase]:
     ]
 
 
-def fetch_latest_offers(scrapers: list[ScraperBase]) -> list[RentalOffer]:
+def offer_matches_filters(offer: RentalOffer, min_price: int = 0, min_size: int = 0) -> bool:
+    """Ověří, zda nabídka splňuje minimální cenu a výměru
+
+    Nabídky, u kterých se cenu nebo výměru nepodařilo určit, jsou ponechány.
+
+    Args:
+        offer (RentalOffer): Kontrolovaná nabídka
+        min_price (int): Minimální cena v Kč (0 = bez omezení)
+        min_size (int): Minimální výměra v m² (0 = bez omezení)
+
+    Returns:
+        bool: True pokud nabídka vyhovuje nastaveným filtrům
+    """
+
+    if min_price > 0:
+        price = parse_price(offer.price)
+        if price is not None and price < min_price:
+            return False
+
+    if min_size > 0:
+        size = parse_size(offer.title)
+        if size is not None and size < min_size:
+            return False
+
+    return True
+
+
+def fetch_latest_offers(scrapers: list[ScraperBase], min_price: int = 0, min_size: int = 0) -> list[RentalOffer]:
     """Získá všechny nejnovější nabídky z dostupných serverů
+
+    Args:
+        scrapers (list[ScraperBase]): Seznam scraperů, ze kterých se nabídky načtou
+        min_price (int): Minimální cena v Kč (0 = bez omezení)
+        min_size (int): Minimální výměra v m² (0 = bez omezení)
 
     Returns:
         list[RentalOffer]: Seznam nabídek
@@ -41,6 +74,10 @@ def fetch_latest_offers(scrapers: list[ScraperBase]) -> list[RentalOffer]:
     for scraper in scrapers:
         try:
             for offer in scraper.get_latest_offers():
+                if not offer_matches_filters(offer, min_price, min_size):
+                    logging.debug("Offer filtered out: {} ({})".format(offer.title, offer.link))
+                    continue
+
                 offers.append(offer)
         except Exception:
             logging.error(traceback.format_exc())
