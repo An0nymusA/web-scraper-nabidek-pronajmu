@@ -1,0 +1,93 @@
+name: Sync fork with upstream
+
+on:
+  schedule:
+    # Každý den ve 4:17 UTC
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  UPSTREAM_REPO: https://github.com/janchaloupka/web-scraper-nabidek-pronajmu.git
+  UPSTREAM_BRANCH: master
+  TARGET_BRANCH: master
+
+jobs:
+  sync:
+    name: Merge upstream changes into master
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the fork
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+          # SYNC_TOKEN (PAT s právem 'workflow') je potřeba pouze pokud
+          # upstream změní soubory v .github/workflows - výchozí GITHUB_TOKEN
+          # takové změny nesmí pushnout.
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "$UPSTREAM_REPO"
+          git fetch upstream "$UPSTREAM_BRANCH"
+
+      - name: Merge upstream
+        id: merge
+        run: |
+          if git merge --no-edit "upstream/$UPSTREAM_BRANCH"; then
+            if [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$TARGET_BRANCH")" ]; then
+              echo "Already up to date with upstream."
+              echo "result=nochange" >> "$GITHUB_OUTPUT"
+            else
+              echo "result=merged" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "Merge conflict, aborting."
+            git merge --abort || true
+            echo "result=conflict" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push merged changes
+        id: push
+        if: steps.merge.outputs.result == 'merged'
+        run: |
+          if git push origin "HEAD:$TARGET_BRANCH"; then
+            echo "result=pushed" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=failed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report a problem
+        if: steps.merge.outputs.result == 'conflict' || steps.push.outputs.result == 'failed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="Automatický sync s upstream selhal"
+
+          if [ "${{ steps.merge.outputs.result }}" = "conflict" ]; then
+            REASON="Merge větve \`upstream/$UPSTREAM_BRANCH\` do \`$TARGET_BRANCH\` skončil konfliktem. Merge byl zrušen, na \`$TARGET_BRANCH\` se nic nezměnilo."
+            HOWTO="git fetch upstream && git merge upstream/$UPSTREAM_BRANCH"
+          else
+            REASON="Merge proběhl, ale push do \`$TARGET_BRANCH\` selhal. Nejčastější příčina: upstream změnil soubor v \`.github/workflows\` a výchozí \`GITHUB_TOKEN\` takovou změnu pushnout nesmí - pak je potřeba přidat secret \`SYNC_TOKEN\` (PAT s právem \`workflow\`)."
+            HOWTO="git fetch upstream && git merge upstream/$UPSTREAM_BRANCH && git push origin $TARGET_BRANCH"
+          fi
+
+          BODY=$(printf '%s\n\nVyřešení ručně:\n\n```\n%s\n```\n\nLog běhu: %s\n' "$REASON" "$HOWTO" "$RUN_URL")
+
+          EXISTING=$(gh issue list --state open --search "in:title $TITLE" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi
