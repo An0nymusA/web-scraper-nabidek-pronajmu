@@ -4,6 +4,6 @@ services:
   web-scraper:
     build: .
     environment:
-      - DEBUG=1
+      - DEBUG=0
     volumes:
       - ./data:/data
