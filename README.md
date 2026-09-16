@@ -60,3 +60,10 @@ Tyto hodnoty jsou nastavené pro bězné použití a není potřeba ji měnit. Z
 - `FOUND_OFFERS_FILE` Cesta k souboru, kam se ukládají dříve nalezené nabídky. Aplikace si soubor vytvoří, ale složka musí existovat. Pokud aplikace nebyla nějakou dobu spuštěna (řádově týdny) je dobré tento soubor smazat - aplikace by toto vyhodnotila jako velké množství nových nabídek a zaspamovala by Discord kanál.
 - `REFRESH_INTERVAL_DAYTIME_MINUTES` - interval po který se mají stáhnout nejnovější nabídky Výchozí 30min, doporučeno minimálně 10min
 - `REFRESH_INTERVAL_NIGHTTIME_MINUTES` - noční interval stahování nabídek. Jde o čas mezi 22h-6h. Výchozí 90min, doporučeno vyšší než denní interval
+
+## Synchronizace s původním repozitářem
+Tento repozitář je fork [`janchaloupka/web-scraper-nabidek-pronajmu`](https://github.com/janchaloupka/web-scraper-nabidek-pronajmu). Workflow `.github/workflows/sync-upstream.yml` každý den (4:17 UTC) mergne větev `master` z původního repozitáře do zdejšího `master` a výsledek pushne - vlastní úpravy v této forku tedy zůstávají zachovány. Sync lze spustit i ručně přes záložku Actions (`Run workflow`).
+
+Pokud merge skončí konfliktem nebo se push nepodaří, workflow nic nepushne a založí issue s postupem pro ruční vyřešení.
+
+Výchozí `GITHUB_TOKEN` nesmí pushnout změny souborů v `.github/workflows`. Pokud takový soubor upstream změní, push selže - v takovém případě přidejte do repozitáře secret `SYNC_TOKEN` s Personal Access Tokenem, který má oprávnění `workflow`.
